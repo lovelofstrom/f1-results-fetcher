@@ -6,3 +6,5 @@ Execute setup.sh after the repo is downloaded to install dependencies in a
 virtual environment.
 
 Execute / Schedule execution run.sh to fetch the weekly F1 Results.
+
+The results are saved in a .csv file in ./data/
