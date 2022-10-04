@@ -8,3 +8,6 @@ virtual environment.
 Execute / Schedule execution run.sh to fetch the weekly F1 Results.
 
 The results are saved in a .csv file in ./data/
+
+## Notes
+Only tested on MacOs.
