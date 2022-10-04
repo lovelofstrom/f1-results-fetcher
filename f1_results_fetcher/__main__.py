@@ -1,6 +1,5 @@
 from pathlib import Path
 from f1_results_fetcher import get_race_results
-import pandas as pd
 
 
 # default project directory for results to be stored.
