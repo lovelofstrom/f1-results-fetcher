@@ -2,6 +2,11 @@ import requests
 import pandas as pd
 
 
+STARTING_DRIVERS = 20
+RACE_INFORMATION_KEYS = tuple(["season", "round", "raceName"])
+RESULTS_KEY = "Results"
+
+
 def get_api_data(api_url: str, parameters: dict) -> dict:
     """
     Extracts api data formatting it as a json.
@@ -13,46 +18,32 @@ def get_api_data(api_url: str, parameters: dict) -> dict:
         return response.json()
 
 
-def get_formatted_results(raw_results_data: dict) -> pd.DataFrame:
+def unnest_ergast_api_race_data(raw_api_data: dict) -> dict:
     """
-    Unpacks the raw data from the ergast API and adds them to a pd.DataFrame.
+    Unnests the race data from the ergast API response.
     """
-    if not raw_results_data:
-        # return empty df if no results
-        return pd.DataFrame()
+    return raw_api_data["MRData"]["RaceTable"]["Races"][0]
 
-    results_data = {
-        "season": [],
-        "round": [],
-        "race_name": [],
-        "driver": [],
-        "team": [],
-        "position": [],
-        "points": [],
+
+def get_race_information_df(
+    labels: tuple, unnested_race_data: dict, starting_drivers: int
+) -> pd.DataFrame:
+    """
+    Docstring
+    """
+    data = {
+            l: [unnested_race_data[l]
+            for i in range(starting_drivers)] for l in labels
     }
-
-    # unpacks data that does not change by driver
-    season = raw_results_data["MRData"]["RaceTable"]["Races"][0]["season"]
-    round_ = raw_results_data["MRData"]["RaceTable"]["Races"][0]["round"]
-    race_name = raw_results_data["MRData"]["RaceTable"]["Races"][0]["raceName"]
-
-    # unpacks driver data
-    for i in raw_results_data["MRData"]["RaceTable"]["Races"][0]["Results"]:
-        results_data["season"].append(season)
-        results_data["round"].append(round_)
-        results_data["race_name"].append(race_name)
-        # add full name?
-        results_data["driver"].append(i["Driver"]["code"])
-        results_data["position"].append(i["position"])
-        results_data["points"].append(i["points"])
-        results_data["team"].append(i["Constructor"]["name"])
-
-    return pd.DataFrame(results_data)
+    return pd.DataFrame(data)
 
 
 def get_race_results(
     api_url: str = "https://ergast.com/api/f1/current/last/results.json",
     api_parameters: dict = None,
+    race_information_keys: tuple = RACE_INFORMATION_KEYS,
+    results_key: str = RESULTS_KEY,
+    starting_drivers: int = STARTING_DRIVERS,
 ) -> pd.DataFrame:
     """
     The function only works with race results from the ergast API.
@@ -64,9 +55,19 @@ def get_race_results(
         return pd.DataFrame()
 
     raw_data = get_api_data(api_url, api_parameters)
-    results = get_formatted_results(raw_data)
-    return results
+    unnested_data = unnest_ergast_api_race_data(raw_data)
+
+    df_race_information = get_race_information_df(
+        race_information_keys, unnested_data, starting_drivers
+    )
+
+    df_results = pd.json_normalize(unnested_data[results_key])
+
+    return df_race_information.merge(
+        df_results, how="inner", right_index=True, left_index=True
+    )
 
 
 if __name__ == "__main__":
     df = get_race_results()
+    print(df.head())
