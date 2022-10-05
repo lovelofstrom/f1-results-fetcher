@@ -3,6 +3,7 @@ from f1_results_fetcher import get_race_results
 
 
 # default project directory for results to be stored.
+# it might make sense to take the url as a command line argument?
 RESULTS_PATH = Path(".").absolute() / "data"
 
 
