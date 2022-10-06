@@ -18,9 +18,9 @@ if __name__ == "__main__":
             part_a, part_b = df.iloc[0, 0:2]
             file_path = RESULTS_PATH / f"{part_a}{part_b}.csv"
         except (IndexError, ValueError):
-            print("The expected data was not found.")
+            print("The expected columns were not found.")
         if file_path.exists():
             print("Data has already been fetched.")
         else:
-            df.to_csv(file_path, index=False)
+            df.to_csv(file_path, index=True)
             print(f"F1 results were saved in {file_path}")
