@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 
 
-STARTING_DRIVERS = 20
+STARTING_DRIVERS_N = 20
 RACE_INFORMATION_KEYS = tuple(["season", "round", "raceName"])
 RESULTS_KEY = "Results"
 
@@ -25,25 +25,22 @@ def unnest_ergast_api_race_data(raw_api_data: dict) -> dict:
     return raw_api_data["MRData"]["RaceTable"]["Races"][0]
 
 
-def get_race_information_df(
+def get_race_information(
     labels: tuple, unnested_race_data: dict, starting_drivers: int
 ) -> pd.DataFrame:
     """
-    Docstring
+    Gets race information that are constant throughout the race. Examples:
+    name of the race, season, round. The data returned is determined by
+    labels argument and is multiplied by the number of starting drivers.
     """
-    data = {
-            l: [unnested_race_data[l]
-            for i in range(starting_drivers)] for l in labels
-    }
+    data = {l: [unnested_race_data[l]
+            for i in range(starting_drivers)] for l in labels}
     return pd.DataFrame(data)
 
 
 def get_race_results(
     api_url: str = "https://ergast.com/api/f1/current/last/results.json",
     api_parameters: dict = None,
-    race_information_keys: tuple = RACE_INFORMATION_KEYS,
-    results_key: str = RESULTS_KEY,
-    starting_drivers: int = STARTING_DRIVERS,
 ) -> pd.DataFrame:
     """
     The function only works with race results from the ergast API.
@@ -57,15 +54,27 @@ def get_race_results(
     raw_data = get_api_data(api_url, api_parameters)
     unnested_data = unnest_ergast_api_race_data(raw_data)
 
-    df_race_information = get_race_information_df(
-        race_information_keys, unnested_data, starting_drivers
+    df_race_information = get_race_information(
+        RACE_INFORMATION_KEYS, unnested_data, STARTING_DRIVERS_N
     )
 
-    df_results = pd.json_normalize(unnested_data[results_key])
+    df_results = pd.json_normalize(unnested_data[RESULTS_KEY])
 
-    return df_race_information.merge(
+    df = df_race_information.merge(
         df_results, how="inner", right_index=True, left_index=True
     )
+
+    df.loc[:, "id"] = df.index.map(
+        lambda x: df.iloc[x][RACE_INFORMATION_KEYS[0]]
+        + df.iloc[x][RACE_INFORMATION_KEYS[1]]
+        +
+        # adds one to the index so that the row starts at 1, not 0.
+        str(x + 1)
+    )
+
+    df = df.set_index("id")
+
+    return df
 
 
 if __name__ == "__main__":
