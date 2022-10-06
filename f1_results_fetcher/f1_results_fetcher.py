@@ -34,7 +34,8 @@ def get_race_information(
     labels argument and is multiplied by the number of starting drivers.
     """
     data = {l: [unnested_race_data[l]
-            for i in range(starting_drivers)] for l in labels}
+            for i in range(starting_drivers)] for l in labels
+    }
     return pd.DataFrame(data)
 
 
@@ -80,5 +81,5 @@ def get_race_results(
 
 if __name__ == "__main__":
     df = get_race_results(
-        "https://ergast.com/api/f1/current/last/results.json")
+            "https://ergast.com/api/f1/current/last/results.json")
     print(df.head())
