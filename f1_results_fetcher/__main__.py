@@ -42,9 +42,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df = get_race_results(args.url)
-
     if args.dst is None:
-        pass
         file_dst_path = get_default_file_name(df)
     else:
         file_dst_path = Path(args.dst)
