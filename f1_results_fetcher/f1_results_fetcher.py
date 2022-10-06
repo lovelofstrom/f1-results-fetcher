@@ -39,7 +39,7 @@ def get_race_information(
 
 
 def get_race_results(
-    api_url: str = "https://ergast.com/api/f1/current/last/results.json",
+    api_url: str,
     api_parameters: dict = None,
 ) -> pd.DataFrame:
     """
@@ -47,6 +47,7 @@ def get_race_results(
     Should take url as argument in case data for a specific race is required.
     The function only works with json data.
     """
+    # mayne ends with results.json?
     if not api_url.endswith(".json"):
         print(f"The url needs to end with '.json'.")
         return pd.DataFrame()
@@ -78,5 +79,6 @@ def get_race_results(
 
 
 if __name__ == "__main__":
-    df = get_race_results()
+    df = get_race_results(
+        "https://ergast.com/api/f1/current/last/results.json")
     print(df.head())
