@@ -1,5 +1,5 @@
 ### F1 Results Fetcher
-Small program that extracts the latest F1 results!
+Small program that extracts F1 results from the ergast API.
 
 ## Instructions
 Execute setup.sh after the repo is downloaded to install dependencies in a
