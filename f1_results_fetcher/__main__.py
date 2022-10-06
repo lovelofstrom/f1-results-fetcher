@@ -1,4 +1,5 @@
 import argparse
+import pandas as pd
 from pathlib import Path
 from f1_results_fetcher import get_race_results
 
@@ -7,13 +8,16 @@ LATEST_F1_RESULTS_URL = "https://ergast.com/api/f1/current/last/results.json"
 DEFAULT_RESULTS_PATH = Path(__file__).absolute().parent.parent / "data"
 
 
-def get_default_file_name(df, file_ext: str = ".csv") -> Path:
+def get_default_file_name(
+    race_results: pd.DataFrame,
+    file_ext: str = ".csv",
+) -> Path:
     """
     Creates a file path based on the names of the first value in the
     first two columns of the pd.DataFrame.
     """
-    part_a, part_b = df.iloc[0, 0:2]
-    return DEFAULT_RESULTS_PATH / f"{part_a}{part_b}{file_ext}"
+    season, round_ = df.iloc[0, 0:2]
+    return DEFAULT_RESULTS_PATH / f"{season}{round_}{file_ext}"
 
 
 if __name__ == "__main__":
