@@ -1,8 +1,6 @@
 import pandas as pd
 import requests
 
-STARTING_DRIVERS_N = 20
-
 
 def validate_api_url(api_url: str):
     """
@@ -37,7 +35,10 @@ def unnest_ergast_api_race_data(raw_api_data: dict) -> dict:
     return raw_api_data["MRData"]["RaceTable"]["Races"][0]
 
 
-def build_race_information(unnested_race_data: dict) -> pd.DataFrame:
+def build_race_information(
+        unnested_race_data: dict,
+        starting_drivers_n: int,
+) -> pd.DataFrame:
     """
     Gets race information that are constant throughout the race. Examples:
     name of the race, season, round. The data returned is determined by
@@ -47,7 +48,7 @@ def build_race_information(unnested_race_data: dict) -> pd.DataFrame:
         l: [
             unnested_race_data[l]
             # one row per starting driver for easy merge w/ race results
-            for i in range(STARTING_DRIVERS_N)
+            for i in range(starting_drivers_n)
         ]
         for l in ["season", "round", "raceName"]
     }
@@ -59,15 +60,21 @@ def build_race_results(unnested_race_data: dict) -> pd.DataFrame:
     Builds a pd.DataFrame with the season, round, race name, and race results
     by driver.
     """
-    df_race_information = build_race_information(unnested_race_data)
-
     # extracts the results by driver from the unnested race data
     df_results = pd.json_normalize(unnested_race_data["Results"])
-    assert len(df_results.index) == STARTING_DRIVERS_N
+    drivers_n = len(df_results.index)
+    df_race_information = build_race_information(
+        unnested_race_data,
+        drivers_n,
+    )
 
-    return df_race_information.merge(
+    df_race_results = df_race_information.merge(
         df_results, how="inner", right_index=True, left_index=True
     )
+
+    assert drivers_n == len(df_race_results.index)
+
+    return df_race_results
 
 
 def get_race_results(api_url: str) -> pd.DataFrame:
