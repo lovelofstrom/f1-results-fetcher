@@ -1,10 +1,23 @@
-import requests
 import pandas as pd
-
+import requests
 
 STARTING_DRIVERS_N = 20
 RACE_INFORMATION_KEYS = tuple(["season", "round", "raceName"])
 RESULTS_KEY = "Results"
+
+
+def validate_api_url(api_url: str):
+    """
+    The program only supports f1 results fetched from the Ergast API in a
+    .json format. The function validates that the url has the expected start
+    and end of a valid url.
+    """
+    url_checks = [
+        api_url.startswith("http://ergast.com/api/f1/")
+        | api_url.startswith("https://ergast.com/api/f1/"),
+        api_url.endswith("results.json"),
+    ]
+    assert all(url_checks)
 
 
 def get_api_data(api_url: str) -> dict:
@@ -22,10 +35,12 @@ def unnest_ergast_api_race_data(raw_api_data: dict) -> dict:
     """
     Unnests the race data from the ergast API response.
     """
+    assert len(raw_api_data["MRData"]["RaceTable"]["Races"]) == 1
     return raw_api_data["MRData"]["RaceTable"]["Races"][0]
 
 
-def get_race_information(
+# needs better name.
+def build_race_information(
     labels: tuple, unnested_race_data: dict, starting_drivers: int
 ) -> pd.DataFrame:
     """
@@ -33,10 +48,33 @@ def get_race_information(
     name of the race, season, round. The data returned is determined by
     labels argument and is multiplied by the number of starting drivers.
     """
-    data = {l: [unnested_race_data[l]
-            for i in range(starting_drivers)] for l in labels
+    data = {
+        l: [
+            unnested_race_data[l]
+            # one row per starting driver for easy merge w/ race results
+            for i in range(starting_drivers)
+        ]
+        for l in labels
     }
     return pd.DataFrame(data)
+
+
+def build_race_results(unnested_race_data: dict) -> pd.DataFrame:
+    """
+    Builds a pd.DataFrame with the season, round, race name, and race results
+    by driver.
+    """
+    df_race_information = build_race_information(
+        RACE_INFORMATION_KEYS, unnested_race_data, STARTING_DRIVERS_N
+    )
+
+    # extracts the results by driver from the unnested race data
+    df_results = pd.json_normalize(unnested_race_data[RESULTS_KEY])
+    assert len(df_results.index) == STARTING_DRIVERS_N
+
+    return df_race_information.merge(
+        df_results, how="inner", right_index=True, left_index=True
+    )
 
 
 def get_race_results(api_url: str) -> pd.DataFrame:
@@ -45,38 +83,18 @@ def get_race_results(api_url: str) -> pd.DataFrame:
     Should take url as argument in case data for a specific race is required.
     The function only works with json data.
     """
-    # mayne ends with results.json?
-    if not api_url.endswith(".json"):
-        print(f"The url needs to end with '.json'.")
-        return pd.DataFrame()
+    validate_api_url(api_url)
 
     raw_data = get_api_data(api_url)
     unnested_data = unnest_ergast_api_race_data(raw_data)
 
-    df_race_information = get_race_information(
-        RACE_INFORMATION_KEYS, unnested_data, STARTING_DRIVERS_N
-    )
+    df_race_results = build_race_results(unnested_data)
 
-    df_results = pd.json_normalize(unnested_data[RESULTS_KEY])
-
-    df = df_race_information.merge(
-        df_results, how="inner", right_index=True, left_index=True
-    )
-
-    df.loc[:, "id"] = df.index.map(
-        lambda x: df.iloc[x][RACE_INFORMATION_KEYS[0]]
-        + df.iloc[x][RACE_INFORMATION_KEYS[1]]
-        +
-        # adds one to the index so that the row starts at 1, not 0.
-        str(x + 1)
-    )
-
-    df = df.set_index("id")
-
-    return df
+    return df_race_results
 
 
 if __name__ == "__main__":
     df = get_race_results(
-            "https://ergast.com/api/f1/current/last/results.json")
+        "https://ergast.com/api/f1/current/last/results.json",
+    )
     print(df.head())
