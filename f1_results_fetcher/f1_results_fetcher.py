@@ -36,8 +36,8 @@ def unnest_ergast_api_race_data(raw_api_data: dict) -> dict:
 
 
 def build_race_information(
-        unnested_race_data: dict,
-        starting_drivers_n: int,
+    unnested_race_data: dict,
+    starting_drivers_n: int,
 ) -> pd.DataFrame:
     """
     Gets race information that are constant throughout the race. Examples:
