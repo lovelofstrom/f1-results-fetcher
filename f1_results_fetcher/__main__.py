@@ -16,6 +16,7 @@ def get_default_file_name(
     Creates a file path based on the names of the first value in the
     first two columns of the pd.DataFrame.
     """
+    assert len(race_results.columns) >= 2
     season, round_ = df.iloc[0, 0:2]
     return DEFAULT_RESULTS_PATH / f"{season}{round_}{file_ext}"
 
@@ -33,11 +34,12 @@ if __name__ == "__main__":
         default=None,
     )
     parser.add_argument(
-        "--save",
+        "--write",
         type=str.lower,
         default="replace",
         choices=["replace", "append"],
-        help="Replaces or appends to the results file.",
+        help=("Creates a new results file or appends to an existing results "
+              "file."),
     )
     args = parser.parse_args()
 
@@ -47,7 +49,7 @@ if __name__ == "__main__":
     else:
         file_dst_path = Path(args.dst)
 
-    if args.save == "append":
+    if args.write == "append":
         include_header = not file_dst_path.exists()
         df.to_csv(file_dst_path, mode="a", header=include_header)
     else:
