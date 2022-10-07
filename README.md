@@ -10,12 +10,8 @@ Execute / Schedule execution ./run.sh to fetch the weekly F1 Results.
 The results are saved in a .csv file in ./data/ by default.
 
 Flexibility when running ./run.sh or ./f1_results_fetcher/__main__.py: \
-    * Specify the full directory to the file you want to save the results to
-      with the --dst arg: \
-      ~/Documents/F1Results/latest_f1_results.csv. \
-      Note: Only .csv is currently supported. \
-    * Specify whether to replace/create a new results file or append to an \
-      existing results file with the --write arg. \
+ * Specify the full directory to the file you want to save the results to with the --dst arg ~Documents/F1Results/latest_f1_results.csv. Note: Only .csv is currently supported.
+    * Specify whether to replace/create a new results file or append to an existing results file with the --write arg. \
       --write append \
     * Decide which race to fetch results from with the --url arg. \
       The url is structure is https://ergast.com/api/f1/YYYY/ROUND/results.json \
