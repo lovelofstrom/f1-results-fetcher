@@ -7,11 +7,11 @@ RACE_INFORMATION_KEYS = tuple(["season", "round", "raceName"])
 RESULTS_KEY = "Results"
 
 
-def get_api_data(api_url: str, parameters: dict) -> dict:
+def get_api_data(api_url: str) -> dict:
     """
     Extracts api data formatting it as a json.
     """
-    response = requests.get(api_url, parameters)
+    response = requests.get(api_url)
     if not response.ok:
         return dict()
     else:
@@ -39,12 +39,9 @@ def get_race_information(
     return pd.DataFrame(data)
 
 
-def get_race_results(
-    api_url: str,
-    api_parameters: dict = None,
-) -> pd.DataFrame:
+def get_race_results(api_url: str) -> pd.DataFrame:
     """
-    The function only works with race results from the ergast API.
+    The function only works with race results from the Ergast API.
     Should take url as argument in case data for a specific race is required.
     The function only works with json data.
     """
@@ -53,7 +50,7 @@ def get_race_results(
         print(f"The url needs to end with '.json'.")
         return pd.DataFrame()
 
-    raw_data = get_api_data(api_url, api_parameters)
+    raw_data = get_api_data(api_url)
     unnested_data = unnest_ergast_api_race_data(raw_data)
 
     df_race_information = get_race_information(
