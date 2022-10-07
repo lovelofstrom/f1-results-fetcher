@@ -1,8 +1,9 @@
 import argparse
-import pandas as pd
 from pathlib import Path
-from f1_results_fetcher import get_race_results
 
+import pandas as pd
+
+from f1_results_fetcher import get_race_results
 
 LATEST_F1_RESULTS_URL = "https://ergast.com/api/f1/current/last/results.json"
 DEFAULT_RESULTS_PATH = Path(__file__).absolute().parent.parent / "data"
