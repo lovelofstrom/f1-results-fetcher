@@ -2,18 +2,16 @@ import pandas as pd
 import requests
 
 
-def validate_api_url(api_url: str):
+def validate_api_url(api_url: str) -> bool:
     """
     The program only supports f1 results fetched from the Ergast API in a
     .json format. The function validates that the url has the expected start
     and end of a valid url.
     """
-    url_checks = [
+    return (
         api_url.startswith("http://ergast.com/api/f1/")
-        | api_url.startswith("https://ergast.com/api/f1/"),
-        api_url.endswith("results.json"),
-    ]
-    assert all(url_checks)
+        or api_url.startswith("https://ergast.com/api/f1/")
+    ) and api_url.endswith("results.json")
 
 
 def get_api_data(api_url: str) -> dict:
@@ -83,7 +81,7 @@ def get_race_results(api_url: str) -> pd.DataFrame:
     Should take url as argument in case data for a specific race is required.
     The function only works with json data.
     """
-    validate_api_url(api_url)
+    assert validate_api_url(api_url), f"{api_url} is invalid."
 
     raw_data = get_api_data(api_url)
     unnested_data = unnest_ergast_api_race_data(raw_data)
